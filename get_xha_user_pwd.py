@@ -31,9 +31,7 @@ class Loginer:
     def check_connectivity(self):
         interface = self.interface
         if not self.interface_def:
-            command = ['ping']
-            if not self.interface_def:
-                command += ["-I", interface]
+            command = ["ping", "-I", interface]
             host = "223.5.5.5"
             command += ['-c', '1', host]  # -n 1 on windows, -c 1 on linux
             try:
