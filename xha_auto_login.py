@@ -190,9 +190,13 @@ if __name__ == "__main__":
     import argparse
     import warnings
     import syslog
-    def log(*a, sep=' '): syslog.syslog(sep.join(map(str, a)))
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--interface", help="网卡接口名称 interface")
     parser.add_argument("-f", "--file", help="用户密码文件路径", default="user_pwd.txt")
+    parser.add_argument("-S", "--no-syslog", action="store_true", help="use print over syslog for log")
     args = parser.parse_args()
+
+    log = lambda *a: print(*a)
+    if args.no_syslog:
+        log = lambda *a: syslog.syslog(' '.join(map(str, a)))
     Loginer(args.interface, log=log).main(args.file, warnings.warn)
