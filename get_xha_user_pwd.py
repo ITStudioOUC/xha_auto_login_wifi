@@ -62,15 +62,16 @@ if check_connectivity(interface):
 with open(file, 'r') as f:
     user_pwd = [i.rstrip('\n\r').split() for i in f.readlines()]
 
-user_pwd_error_or_not_unlimit_combo = []
+user_pwd_error_or_not_unlimit_combo_idx = set()
 # 检查是否付费
 not_succ = True
 while not_succ:
     # 随机选择，防止前面有密码错误的用户卡死
-    user, pwd = random.choice(user_pwd)
-    if user in user_pwd_error_or_not_unlimit_combo:
+    user_index = random.randrange(len(user_pwd))
+    if user_index in user_pwd_error_or_not_unlimit_combo_idx:
         continue
 
+    (user, pwd) = user_pwd[user_index]
     url = f'http://192.168.101.201:801/eportal/portal/page/loadUserInfo?callback=dr1004&lang=zh-CN&program_index=ctshNw1713845951&page_index=V5fmKw1713845966&user_account={user}&wlan_user_ip=0.0.0.0&wlan_user_mac=000000000000&jsVersion=4.1&v=599&lang=zh'
     t = request_get_text(url, headers={
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36 Edg/105.0.1343.33',
@@ -108,7 +109,7 @@ while not_succ:
                 msg += f"接口 {interface}： "
             if '密码错误' in result['msg']:
                 print(f"{user} {pwd} 密码错误")
-                user_pwd_error_or_not_unlimit_combo.append(user)
+                user_pwd_error_or_not_unlimit_combo_idx.add(user_index)
             elif '已经在线' in result['msg']:
                 msg += "正常在线！"
                 not_succ = False
@@ -117,9 +118,16 @@ while not_succ:
                 not_succ = False
             print(msg)
     else:
-        user_pwd_error_or_not_unlimit_combo.append(user)
+        user_pwd_error_or_not_unlimit_combo_idx.add(user_index)
 # 删除密码错误或不满足要求的用户
-if user_pwd_error_or_not_unlimit_combo:
-    sed_i_arg = '/^' + '\\|^'.join(user_pwd_error_or_not_unlimit_combo) + '/d'
-    cmd = ['sed','-i', sed_i_arg, file]
-    subprocess.run(cmd)
+
+with open(file, 'w') as f:
+    for i in range(len(user_pwd)):
+        if i in user_pwd_error_or_not_unlimit_combo_idx:
+            user_pwd_error_or_not_unlimit_combo_idx.remove(i)
+        else:
+            t = user_pwd[i]
+            f.write(t[0])
+            f.write(' ')
+            f.write(t[1])
+            f.write('\n')
