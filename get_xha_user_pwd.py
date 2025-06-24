@@ -14,8 +14,8 @@ args = parser.parse_args()
 def check_connectivity_ping(host, interface):
     command = ['ping', '-I', interface, '-c', '1', host]  # -n 1 on windows, -c 1 on linux
     try:
-        result = subprocess.run(command, capture_output=True, timeout=2, check=True)
-        return result.returncode == 0
+        result = subprocess.check_call(command, timeout=2)
+        return result == 0
     except subprocess.TimeoutExpired:
         print(f"接口 {interface}：Ping to {host} timed out.")
         return False
@@ -36,7 +36,7 @@ if check_connectivity_ping("223.5.5.5", interface):
     exit()
 
 with open("user_pwd.txt", 'r') as f:
-    user_pwd = [str(i).replace('\n', '').split() for i in f.readlines()]
+    user_pwd = [i.rstrip('\n\r').split() for i in f.readlines()]
 
 user_pwd_error_or_not_unlimit_combo = []
 # 检查是否付费
@@ -53,7 +53,7 @@ while True:
     })
     text = r.text.replace('dr1004(', '').replace(')', '').replace(';', '')
     j = json.loads(text)
-    if j['user_info']['user_state'] == "正常" and j['user_info']['available_flow'] in ["0MB","无限制"]:
+    if j['user_info']['user_state'] == "正常" and j['user_info']['available_flow'] in ("0MB", "无限制"):
         url = f"http://192.168.101.201:801/eportal/portal/page/loadOnlineRecord?callback=dr1006&lang=zh-CN&program_index=ctshNw1713845951&page_index=V5fmKw1713845966&user_account={user}&wlan_user_ip=10.169.0.241&wlan_user_mac=000000000000&start_time=2010-01-01&end_time=2100-01-01&start_rn=1&end_rn=5&jsVersion=4.1&v=2399&lang=zh"
         # 获取在线设备
         r = requests.get(url, headers={
