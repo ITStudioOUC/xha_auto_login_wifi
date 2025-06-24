@@ -146,7 +146,7 @@ class Loginer:
                 bad_user_callback(user)
 
 
-    def main(self, file, warn):
+    def main(self, file, warn, sep=' '):
         interface_def = self.interface_def
         if interface_def:
             warn("no interface given by -i or --interface, use default route")
@@ -156,7 +156,7 @@ class Loginer:
             return
 
         with open(file, 'r') as f:
-            user_pwd = [i.rstrip("\r\n").split(' ') for i in f.readlines()]
+            user_pwd = [i.rstrip("\r\n").split(sep) for i in f.readlines()]
 
         # login
         user_pwd_error_or_not_unlimit_combo_idx = set()
@@ -190,13 +190,14 @@ if __name__ == "__main__":
     import argparse
     import warnings
     import syslog
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-i", "--interface", help="网卡接口名称 interface")
-    parser.add_argument("-f", "--file", help="用户密码文件路径", default="user_pwd.txt")
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument("-i", "--interface", help="网卡接口名称. If not given, use default route", default=None)
+    parser.add_argument("-f", "--file", help="用户密码文件路径, one record each line", default="user_pwd.txt")
     parser.add_argument("-S", "--no-syslog", action="store_true", help="use print over syslog for log")
+    parser.add_argument("-s", "--sep", help="separator used in file between user and password", default=' ')
     args = parser.parse_args()
 
     log = lambda *a: print(*a)
     if args.no_syslog:
         log = lambda *a: syslog.syslog(' '.join(map(str, a)))
-    Loginer(args.interface, log=log).main(args.file, warnings.warn)
+    Loginer(args.interface, log=log, sep=args.sep).main(args.file, warnings.warn)
