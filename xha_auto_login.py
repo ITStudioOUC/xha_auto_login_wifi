@@ -54,21 +54,24 @@ class Loginer:
                 return True
             except:
                 return False
-    referrer = "http://192.168.101.201/"
+    referrer = "http://192.168.101.201"
     header = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36 Edg/105.0.1343.33",
         "Referer": referrer
     }
 
+
     @staticmethod
     def url(last, dr, v):
-        return "/eportal/portal/page/" + last + "?callback=dr" + dr + "&v=" + v + \
-            "&lang=zh-CN&program_index=ctshNw1713845951&page_index=V5fmKw1713845966&wlan_user_ip=0.0.0.0&wlan_user_mac=000000000000&jsVersion=4.1"
+        return "/eportal/portal/" + last + "?callback=dr" + dr + "&v=" + v + \
+            "&lang=zh-CN&wlan_user_mac=000000000000&jsVersion=4.1"
 
     ip0 = "&wlan_user_ip=0.0.0.0"
-    urlloadUserInfo = referrer + url("loadUserInfo", "1004", "599") + ip0
-    urlloadOnlineRecord = referrer + url("loadOnlineRecord", "1006", "2399") + "&wlan_user_ip=10.169.0.241&start_time=2010-01-01&end_time=2100-01-01&start_rn=1&end_rn=5"
-    urllogin = referrer + url("loadOnlineRecord", "1006", "2399") + ip0 + "&login_method=1&wlan_user_ipv6=&wlan_user_mac=000000000000&wlan_ac_ip=&wlan_ac_name=&terminal_type=1"
+    index_qs = "&program_index=ctshNw1713845951&page_index=V5fmKw1713845966"
+    urlloadUserInfo = referrer + ":801" + url("page/loadUserInfo", "1004", "599") + ip0 + index_qs
+    time_qs = "&start_time=2010-01-01&end_time=2100-01-01&start_rn=1&end_rn=5"
+    urlloadOnlineRecord = referrer + ":801" + url("page/loadOnlineRecord", "1006", "2399") + time_qs + index_qs + "&wlan_user_ip=10.169.0.241"
+    urllogin = "https://xha.ouc.edu.cn:802" + url("login", "1003", "2425") + ip0 + "&login_method=1&wlan_user_ipv6=&wlan_ac_ip=&wlan_ac_name=&terminal_type=1"
 
     @staticmethod
     def json_from_drnnnn(t):
@@ -83,7 +86,8 @@ class Loginer:
         try:
             t = request_get_text(url, headers=self.header)
         except URLError as e:
-            if e.reason.errno == ENETUNREACH:
+            # e.reason may be Error or str
+            if getattr(e.reason, "errno", None) == ENETUNREACH:
                 return LoginStatus.no_wifi
             raise
 
