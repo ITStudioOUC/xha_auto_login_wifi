@@ -10,8 +10,11 @@ def print(*a, sep=' '): syslog.syslog(sep.join(map(str, a)))
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument("-i", "--interface", help="网卡接口名称 interface")
+parser.add_argument("-f", "--file", help="用户密码文件路径", default="user_pwd.txt")
 args = parser.parse_args()
 interface = args.interface
+file = args.file
+
 interface_def = interface is None
 
 def request_get_text(url, headers={}):
@@ -47,7 +50,7 @@ if interface_def:
 if check_connectivity_ping("223.5.5.5", interface):
     exit()
 
-with open("user_pwd.txt", 'r') as f:
+with open(file, 'r') as f:
     user_pwd = [i.rstrip('\n\r').split() for i in f.readlines()]
 
 user_pwd_error_or_not_unlimit_combo = []
@@ -109,5 +112,5 @@ while not_succ:
 # 删除密码错误或不满足要求的用户
 if user_pwd_error_or_not_unlimit_combo:
     sed_i_arg = '/^' + '\\|^'.join(user_pwd_error_or_not_unlimit_combo) + '/d'
-    cmd = ['sed','-i', sed_i_arg, '/root/user_pwd.txt']
+    cmd = ['sed','-i', sed_i_arg, file]
     subprocess.run(cmd)
