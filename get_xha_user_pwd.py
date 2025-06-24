@@ -1,7 +1,9 @@
 
-
+from sys import maxsize
 from enum import IntEnum, auto
+from urllib.error import URLError
 from urllib import request
+from errno import ENETUNREACH
 import json
 import random
 import subprocess
@@ -12,7 +14,8 @@ def request_get_text(url, headers={}):
         return response.read().decode('utf-8')
 
 class LoginStatus(IntEnum):
-    unknown = -3
+    unknown = -maxsize-1
+    no_wifi = -3
     not_unlimit = -2
     bad_pwd = -1
     succ = auto()
@@ -56,10 +59,16 @@ class Loginer:
         interface = self.interface
         interface_def = self.interface_def
         url = f'http://192.168.101.201:801/eportal/portal/page/loadUserInfo?callback=dr1004&lang=zh-CN&program_index=ctshNw1713845951&page_index=V5fmKw1713845966&user_account={user}&wlan_user_ip=0.0.0.0&wlan_user_mac=000000000000&jsVersion=4.1&v=599&lang=zh'
-        t = request_get_text(url, headers={
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36 Edg/105.0.1343.33',
-            'Referer': 'http://192.168.101.201/'
-        })
+        try:
+            t = request_get_text(url, headers={
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36 Edg/105.0.1343.33',
+                'Referer': 'http://192.168.101.201/'
+            })
+        except URLError as e:
+            if e.reason.errno == ENETUNREACH:
+                return LoginStatus.no_wifi
+            raise
+
         text = t.replace('dr1004(', '').replace(')', '').replace(';', '')
         j = json.loads(text)
         # 检查是否付费
@@ -113,6 +122,8 @@ class Loginer:
         while not_succ:
             (user, pwd) = user_pwd_gen()
             ret = self.login(user, pwd)
+            if ret == LoginStatus.no_wifi:
+                raise RuntimeError("not connect to wifi yet")
             not_succ = ret < 0
 
             if ret in {LoginStatus.bad_pwd, LoginStatus.not_unlimit}:
