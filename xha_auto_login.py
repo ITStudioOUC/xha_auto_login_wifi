@@ -200,4 +200,4 @@ if __name__ == "__main__":
     log = lambda *a: print(*a)
     if args.no_syslog:
         log = lambda *a: syslog.syslog(' '.join(map(str, a)))
-    Loginer(args.interface, log=log, sep=args.sep).main(args.file, warnings.warn)
+    Loginer(args.interface, log=log).main(args.file, warnings.warn, sep=args.sep)
