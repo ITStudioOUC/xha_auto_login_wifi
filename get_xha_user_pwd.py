@@ -1,4 +1,4 @@
-import requests
+from urllib import request
 import json
 import random
 import subprocess
@@ -10,6 +10,11 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument("-i", "--interface", help="网卡接口名称 interface")
 args = parser.parse_args()
+
+def request_get_text(url, headers={}):
+    req = request.Request(url, headers=headers)
+    with request.urlopen(req) as response:
+        return response.read().decode('utf-8')
 
 def check_connectivity_ping(host, interface):
     command = ['ping', '-I', interface, '-c', '1', host]  # -n 1 on windows, -c 1 on linux
@@ -47,20 +52,20 @@ while True:
         continue
 
     url = f'http://192.168.101.201:801/eportal/portal/page/loadUserInfo?callback=dr1004&lang=zh-CN&program_index=ctshNw1713845951&page_index=V5fmKw1713845966&user_account={user}&wlan_user_ip=0.0.0.0&wlan_user_mac=000000000000&jsVersion=4.1&v=599&lang=zh'
-    r = requests.get(url, headers={
+    t = request_get_text(url, headers={
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36 Edg/105.0.1343.33',
         'Referer': 'http://192.168.101.201/'
     })
-    text = r.text.replace('dr1004(', '').replace(')', '').replace(';', '')
+    text = t.replace('dr1004(', '').replace(')', '').replace(';', '')
     j = json.loads(text)
     if j['user_info']['user_state'] == "正常" and j['user_info']['available_flow'] in ("0MB", "无限制"):
         url = f"http://192.168.101.201:801/eportal/portal/page/loadOnlineRecord?callback=dr1006&lang=zh-CN&program_index=ctshNw1713845951&page_index=V5fmKw1713845966&user_account={user}&wlan_user_ip=10.169.0.241&wlan_user_mac=000000000000&start_time=2010-01-01&end_time=2100-01-01&start_rn=1&end_rn=5&jsVersion=4.1&v=2399&lang=zh"
         # 获取在线设备
-        r = requests.get(url, headers={
+        t = request_get_text(url, headers={
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36 Edg/105.0.1343.33',
             'Referer': 'http://192.168.101.201/'
         })
-        text = r.text.replace('dr1006(', '').replace(')', '').replace(';', '')
+        text = t.replace('dr1006(', '').replace(')', '').replace(';', '')
         j1 = json.loads(text)
         if int(j1['count']) == device:
             # 判断密码是否正确
