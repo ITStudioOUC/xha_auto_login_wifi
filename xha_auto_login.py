@@ -11,7 +11,7 @@ import subprocess
 def request_get_text(url, headers={}):
     req = request.Request(url, headers=headers)
     with request.urlopen(req) as response:
-        return response.read().decode('utf-8')
+        return response.read().decode("utf-8")
 
 class LoginStatus(IntEnum):
     unknown = -maxsize-1
@@ -36,7 +36,7 @@ class Loginer:
         if not self.interface_def:
             command = ["ping", "-I", interface]
             host = "223.5.5.5"
-            command += ['-c', '1', host]  # -n 1 on windows, -c 1 on linux
+            command += ["-c", "1", host]  # -n 1 on windows, -c 1 on linux
             try:
                 result = subprocess.check_call(command, timeout=2)
                 return result == 0
@@ -89,7 +89,7 @@ class Loginer:
 
         j = self.json_from_drnnnn(t)
         # 检查是否付费
-        if j['user_info']['user_state'] == "正常" and j['user_info']['available_flow'] in ("0MB", "无限制"):
+        if j["user_info"]["user_state"] == "正常" and j["user_info"]["available_flow"] in ("0MB", "无限制"):
             url = self.urlloadOnlineRecord + u
             # 获取在线设备
             t = request_get_text(url, headers=self.header)
@@ -115,14 +115,14 @@ class Loginer:
                     self.log(f"使用接口 {interface} 进行请求")
                     msg += f"接口 {interface}： "
 
-                j_msg = j_res['msg']
-                if '密码错误' in j_msg:
+                j_msg = j_res["msg"]
+                if "密码错误" in j_msg:
                     msg += f"{user} {pwd} 密码错误"
                     result = LoginStatus.bad_pwd
-                elif '已经在线' in j_msg:
+                elif "已经在线" in j_msg:
                     msg += "正常在线！"
                     result = LoginStatus.used_online
-                elif '认证成功' in j_msg:
+                elif "认证成功" in j_msg:
                     msg += f"使用账号{user}登录成功!"
                     result = LoginStatus.succ
                 self.log(msg)
