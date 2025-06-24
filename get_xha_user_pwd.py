@@ -26,28 +26,37 @@ def append_interface(command, pre, interface):
     if not interface_def:
         command += [pre, interface]
 
-def check_connectivity_ping(host, interface):
-    command = ['ping']
-    append_interface(command, '-I', interface)
-    command += ['-c', '1', host]  # -n 1 on windows, -c 1 on linux
-    try:
-        result = subprocess.check_call(command, timeout=2)
-        return result == 0
-    except subprocess.TimeoutExpired:
-        print(f"接口 {interface}：Ping to {host} timed out.")
-        return False
-    except subprocess.CalledProcessError:
-        return False
-    except Exception as e:
-        print(f"接口 {interface}：Error during ping: {e}")
-        return False
+def check_connectivity(interface):
+    if not interface_def:
+        command = ['ping']
+        append_interface(command, '-I', interface)
+        host = "223.5.5.5"
+        command += ['-c', '1', host]  # -n 1 on windows, -c 1 on linux
+        try:
+            result = subprocess.check_call(command, timeout=2)
+            return result == 0
+        except subprocess.TimeoutExpired:
+            print(f"接口 {interface}：Ping to {host} timed out.")
+            return False
+        except subprocess.CalledProcessError:
+            return False
+        except Exception as e:
+            print(f"接口 {interface}：Error during ping: {e}")
+            return False
+    else:
+        try:
+            request_get_text("http://connect.rom.miui.com/generate_204")
+            return True
+        except:
+            return False
+
 
 device = 0
 if interface_def:
     warnings.warn("no interface given by -i or --interface, use default route")
 
 # 检测网络联通性
-if check_connectivity_ping("223.5.5.5", interface):
+if check_connectivity(interface):
     exit()
 
 with open(file, 'r') as f:
