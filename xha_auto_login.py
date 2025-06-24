@@ -102,14 +102,16 @@ class Loginer:
                     msg += f"接口 {interface}： "
                 if '密码错误' in result['msg']:
                     self.log(f"{user} {pwd} 密码错误")
+                    self.log(msg)
                     return LoginStatus.bad_pwd
                 elif '已经在线' in result['msg']:
                     msg += "正常在线！"
+                    self.log(msg)
                     return LoginStatus.used_online
                 elif '认证成功' in result['msg']:
                     msg += f"使用账号{user}登录成功!"
+                    self.log(msg)
                     return LoginStatus.succ
-                self.log(msg)
             return LoginStatus.unknown
         else:
             return LoginStatus.not_unlimit
