@@ -24,11 +24,11 @@ class LoginStatus(IntEnum):
 class Loginer:
     def __init__(self,
         interface = None,
-        device = 0,
+        online_device_limit = 2,
         log = print,
     ):
         self.interface = interface
-        self.device_str = str(device)
+        self.online_device_limit = online_device_limit
         self.log = log
         self.interface_def = interface is None
     def check_connectivity(self):
@@ -99,7 +99,7 @@ class Loginer:
             t = request_get_text(url, headers=self.header)
             j1 = self.json_from_drnnnn(t)
             result = LoginStatus.unknown
-            if j1['count'] == self.device_str:
+            if j1['count'] <= self.online_device_limit:
                 # 判断密码是否正确
                 url = self.urllogin + u + "&user_password=" + pwd
                 if interface_def:
@@ -129,7 +129,8 @@ class Loginer:
                 elif "认证成功" in j_msg:
                     msg += f"使用账号{user}登录成功!"
                     result = LoginStatus.succ
-                self.log(msg)
+                if msg != "":
+                    self.log(msg)
             return result
         else:
             return LoginStatus.not_unlimit
@@ -199,9 +200,13 @@ if __name__ == "__main__":
     parser.add_argument("-f", "--file", help="用户密码文件路径, one record each line", default="user_pwd.txt")
     parser.add_argument("-S", "--no-syslog", action="store_true", help="use print over syslog for log")
     parser.add_argument("-s", "--sep", help="separator used in file between user and password", default=' ')
+    parser.add_argument("-n", "--online-device-limit", help="only connect to it if its online device is not more than ONLINE_DEVICE_LIMIT", type=int, default=2)
+    # TODO: support auto means 3 if only one account available but 0 otherwise
+    #  Or connect the account with least online device number
     args = parser.parse_args()
 
     log = lambda *a: print(*a)
     if args.no_syslog:
         log = lambda *a: syslog.syslog(' '.join(map(str, a)))
-    Loginer(args.interface, log=log).main(args.file, warnings.warn, sep=args.sep)
+    n = args.online_device_limit
+    Loginer(args.interface, log=log, online_device_limit=n).main(args.file, warnings.warn, sep=args.sep)
