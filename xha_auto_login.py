@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python3
 from sys import maxsize
 from enum import IntEnum, auto
 from urllib.error import URLError
