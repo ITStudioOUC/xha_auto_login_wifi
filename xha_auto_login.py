@@ -194,7 +194,10 @@ class Loginer:
 if __name__ == "__main__":
     import argparse
     import warnings
-    import syslog
+    try:
+        import syslog  # Availability: Unix, not WASI, not iOS.
+    except ImportError:
+        syslog = None
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("-i", "--interface", help="网卡接口名称. If not given, use default route", default=None)
     parser.add_argument("-f", "--file", help="用户密码文件路径, one record each line", default="user_pwd.txt")
@@ -206,7 +209,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     log = lambda *a: print(*a)
-    if args.no_syslog:
+    if args.no_syslog or syslog is not None:
         log = lambda *a: syslog.syslog(' '.join(map(str, a)))
     n = args.online_device_limit
     Loginer(args.interface, log=log, online_device_limit=n).main(args.file, warnings.warn, sep=args.sep)
